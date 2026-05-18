@@ -1,35 +1,33 @@
 resource "aws_instance" "example" {
-  ami           = "ami-0220d79f3f480ecf5"
-  instance_type = "t3.micro"
+  for_each = toset(var.instances)
+  ami           = var.ami_id
+  #for_each = toset(var.environment)
+  #count = length(var.environment)
+  instance_type = var.environment == "dev" ? "t3.micro" :"t3.small"
   vpc_security_group_ids = [aws_security_group.allow_tls.id]
 
-  tags = {
-    Name = "terraform-state-demo"
-    Project = "roboshop"
-  }
+  tags = var.ec2_tags
 }
 
 resource "aws_security_group" "allow_tls" {
-  name        = "allow-all-terraform-change" # this is for AWS account
-  description = "Allow TLS inbound traffic and all outbound traffic"
+  name        = var.sg_name
+  description = var.sg_description
 
   egress {
-    from_port        = 0
-    to_port          = 0
+    from_port        = var.sg_from_port
+    to_port          = var.sg_to_port
     protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    cidr_blocks      = var.cidr_blocks
     ipv6_cidr_blocks = ["::/0"]
   }
 
   ingress {
-    from_port        = 0
-    to_port          = 0
+    from_port        = var.sg_from_port
+    to_port          = var.sg_to_port
     protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    cidr_blocks      = var.cidr_blocks
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  tags = {
-    Name = "allow-all-terraform"
-  }
+  tags = var.sg_tags
 }
